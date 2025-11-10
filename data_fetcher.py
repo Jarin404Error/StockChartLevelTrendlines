@@ -17,8 +17,8 @@ def fetch_data(ticker: str) -> pd.DataFrame:
     Fetches historical stock data for a given ticker.
     
     Retrieves the last 7 days of 5-minute OHLCV data including pre-market
-    and after-hours trading data. Results are cached for 5 minutes to
-    reduce API calls.
+    and after-hours trading data. Results are cached for 2 minutes to
+    ensure fresh data with auto-refresh.
     
     Args:
         ticker: Stock symbol to fetch data for (e.g., 'AAPL', 'TSLA')

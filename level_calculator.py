@@ -11,7 +11,10 @@ import datetime as dt
 import numpy as np
 import pandas as pd
 
-from config import MARKET_OPEN, MARKET_CLOSE, PREMARKET_OPEN, ORB_5_END, ORB_15_END
+from config import (
+    MARKET_OPEN, MARKET_CLOSE, PREMARKET_OPEN, ORB_5_END, ORB_15_END,
+    ASIA_SESSION_START, ASIA_SESSION_END, LONDON_SESSION_START, LONDON_SESSION_END
+)
 
 
 def find_previous_trading_day(df: pd.DataFrame, today_date: dt.date) -> tuple:
@@ -123,7 +126,88 @@ def calculate_orb_levels(df: pd.DataFrame, today_date: dt.date,
     return None, None
 
 
-def calculate_levels(df_7day: pd.DataFrame) -> dict:
+def calculate_asia_session_levels(df: pd.DataFrame, today_date: dt.date) -> tuple:
+    """
+    Calculates Asia session high and low.
+    
+    Asia session is from 6:00 PM ET (previous day) to 2:00 AM ET (current day).
+    This captures the Asian market trading hours.
+    
+    Args:
+        df: DataFrame with historical OHLCV data
+        today_date: Current trading day
+        
+    Returns:
+        Tuple of (Asia_High, Asia_Low) or (None, None) if no data found
+    """
+    try:
+        # Get previous day
+        all_dates = sorted(np.unique(df.index.date))
+        today_idx = list(all_dates).index(today_date)
+        
+        if today_idx == 0:
+            return None, None
+        
+        prev_date = all_dates[today_idx - 1]
+        
+        # Get data from previous day 6 PM onwards
+        prev_evening = df[df.index.date == prev_date]
+        prev_evening = prev_evening[prev_evening.index.time >= ASIA_SESSION_START]
+        
+        # Get data from today up to 2 AM
+        today_early = df[df.index.date == today_date]
+        today_early = today_early[today_early.index.time < ASIA_SESSION_END]
+        
+        # Combine both periods
+        asia_data = pd.concat([prev_evening, today_early])
+        
+        if not asia_data.empty:
+            asia_high = asia_data['High'].max()
+            asia_low = asia_data['Low'].min()
+            print(f"Asia session levels calculated: High={asia_high:.2f}, Low={asia_low:.2f}")
+            return asia_high, asia_low
+            
+    except Exception as e:
+        print(f"Error calculating Asia session levels: {e}")
+    
+    return None, None
+
+
+def calculate_london_session_levels(df: pd.DataFrame, today_date: dt.date) -> tuple:
+    """
+    Calculates London session high and low.
+    
+    London session is from 2:00 AM ET to 9:30 AM ET (US market open).
+    This captures the European/London market trading hours.
+    
+    Args:
+        df: DataFrame with historical OHLCV data
+        today_date: Current trading day
+        
+    Returns:
+        Tuple of (London_High, London_Low) or (None, None) if no data found
+    """
+    try:
+        # Get today's data between 2 AM and 9:30 AM
+        london_data = df[df.index.date == today_date]
+        london_data = london_data[
+            (london_data.index.time >= LONDON_SESSION_START) & 
+            (london_data.index.time < LONDON_SESSION_END)
+        ]
+        
+        if not london_data.empty:
+            london_high = london_data['High'].max()
+            london_low = london_data['Low'].min()
+            print(f"London session levels calculated: High={london_high:.2f}, Low={london_low:.2f}")
+            return london_high, london_low
+            
+    except Exception as e:
+        print(f"Error calculating London session levels: {e}")
+    
+    return None, None
+
+
+def calculate_levels(df_7day: pd.DataFrame, ticker: str = None) -> dict:
     """
     Calculates all key trading levels from historical data.
     
@@ -132,19 +216,23 @@ def calculate_levels(df_7day: pd.DataFrame) -> dict:
     - Pre-market High/Low (PM_High/PM_Low)
     - 5-minute ORB levels (ORB_5_High/ORB_5_Low)
     - 15-minute ORB levels (ORB_15_High/ORB_15_Low)
+    - Asia session levels (Asia_High/Asia_Low) - SPY only
+    - London session levels (London_High/London_Low) - SPY only
     
     Args:
         df_7day: DataFrame with 7 days of OHLCV data
+        ticker: Stock ticker symbol (for SPY-specific levels)
         
     Returns:
         Dictionary mapping level names to prices. Keys may include:
         'PDH', 'PDL', 'PM_High', 'PM_Low', 'ORB_5_High', 'ORB_5_Low',
-        'ORB_15_High', 'ORB_15_Low'
+        'ORB_15_High', 'ORB_15_Low', 'Asia_High', 'Asia_Low', 
+        'London_High', 'London_Low'
         
     Example:
-        >>> levels = calculate_levels(df)
+        >>> levels = calculate_levels(df, ticker='SPY')
         >>> print(levels)
-        {'PDH': 150.25, 'PDL': 148.50, 'PM_High': 149.80, ...}
+        {'PDH': 150.25, 'PDL': 148.50, 'Asia_High': 149.80, ...}
     """
     levels = {}
     
@@ -180,6 +268,22 @@ def calculate_levels(df_7day: pd.DataFrame) -> dict:
     if orb15_high is not None:
         levels["ORB_15_High"] = orb15_high
         levels["ORB_15_Low"] = orb15_low
+    
+    # Calculate Asia and London session levels (SPY only)
+    if ticker and ticker.upper() == "SPY":
+        print(f"Calculating global session levels for {ticker}...")
+        
+        # Calculate Asia session levels
+        asia_high, asia_low = calculate_asia_session_levels(df_7day, today_date)
+        if asia_high is not None:
+            levels["Asia_High"] = asia_high
+            levels["Asia_Low"] = asia_low
+        
+        # Calculate London session levels
+        london_high, london_low = calculate_london_session_levels(df_7day, today_date)
+        if london_high is not None:
+            levels["London_High"] = london_high
+            levels["London_Low"] = london_low
     
     return levels
 

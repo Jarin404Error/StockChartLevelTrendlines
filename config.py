@@ -24,6 +24,12 @@ MARKET_CLOSE = dt.time(16, 0)
 ORB_5_END = dt.time(9, 35)      # First 5 minutes after open
 ORB_15_END = dt.time(9, 45)     # First 15 minutes after open
 
+# Global session times (in ET for SPY)
+ASIA_SESSION_START = dt.time(18, 0)    # 6:00 PM ET (previous day)
+ASIA_SESSION_END = dt.time(2, 0)       # 2:00 AM ET (next day)
+LONDON_SESSION_START = dt.time(2, 0)   # 2:00 AM ET
+LONDON_SESSION_END = dt.time(9, 30)    # 9:30 AM ET (US market open)
+
 
 # ============================================================================
 # DATA FETCHING CONFIGURATION
@@ -32,7 +38,8 @@ ORB_15_END = dt.time(9, 45)     # First 15 minutes after open
 # Data fetching parameters
 DATA_PERIOD = "7d"              # Fetch last 7 days of data
 DATA_INTERVAL = "5m"            # 5-minute intervals
-CACHE_TTL = 300                 # Cache data for 5 minutes (in seconds)
+CACHE_TTL = 120                 # Cache data for 2 minutes (in seconds)
+AUTO_REFRESH_INTERVAL = 120     # Auto-refresh every 2 minutes (in seconds)
 
 
 # ============================================================================
@@ -69,6 +76,10 @@ LEVEL_COLORS = {
     "PDL": "gray",          # Previous Day Low
     "ORB_5/15_High": "cyan",
     "ORB_5/15_Low": "cyan",
+    "Asia_High": "orange",  # Asia session high
+    "Asia_Low": "orange",   # Asia session low
+    "London_High": "purple", # London session high
+    "London_Low": "purple",  # London session low
 }
 
 # Pre-market shading color
@@ -86,3 +97,32 @@ LEVEL_LINE_DASH = "dash"
 LEVEL_FONT_SIZE = 10
 LEVEL_LABEL_BG_COLOR = "rgba(255, 255, 255, 0.7)"
 
+
+# ============================================================================
+# INDICATOR CONFIGURATION
+# ============================================================================
+
+# RSI settings
+RSI_PERIOD = 14
+RSI_OVERBOUGHT = 70
+RSI_OVERSOLD = 30
+
+# MACD settings
+MACD_FAST = 12
+MACD_SLOW = 26
+MACD_SIGNAL = 9
+
+# Indicator colors
+RSI_COLOR = "purple"
+RSI_OVERBOUGHT_COLOR = "rgba(255, 0, 0, 0.2)"
+RSI_OVERSOLD_COLOR = "rgba(0, 255, 0, 0.2)"
+VWAP_COLOR = "orange"
+MACD_LINE_COLOR = "blue"
+MACD_SIGNAL_COLOR = "red"
+MACD_HISTOGRAM_POSITIVE = "rgba(0, 150, 0, 0.5)"
+MACD_HISTOGRAM_NEGATIVE = "rgba(200, 0, 0, 0.5)"
+
+# Chart layout with indicators
+CHART_HEIGHT_WITH_INDICATORS = 1000
+CHART_ROW_HEIGHTS_WITH_INDICATORS = [0.5, 0.15, 0.15, 0.2]  # Price, RSI, MACD, Volume
+INDICATOR_VERTICAL_SPACING = 0.02
