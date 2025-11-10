@@ -7,6 +7,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import numpy as np
 import time  # For the auto-refresh
+from gemini import get_gemini_analysis
 
 # --- 1. Page Configuration ---
 st.set_page_config(
@@ -358,6 +359,23 @@ else:
 
         st.caption("This dashboard fetches 7 days of 5-minute data to calculate previous day and pre-market levels.")
         
-        # --- 8. Auto-Refresh Loop ---
-        time.sleep(300)  # Wait 300 seconds (5 minutes)
-        st.rerun()       # Rerun the script
+        # --- 8. AI Analysis Section ---
+        st.markdown("---")  # Divider
+        st.subheader("🤖 AI Market Analysis")
+        
+        col1, col2 = st.columns([1, 4])
+        
+        with col1:
+            get_ai_feedback = st.button("Get AI Feedback", type="primary", use_container_width=True)
+        
+        with col2:
+            if get_ai_feedback:
+                with st.spinner("Analyzing market data with Gemini AI..."):
+                    ai_analysis = get_gemini_analysis(processed_levels, current_price, ACTIVE_TICKER)
+                    st.markdown(ai_analysis)
+            else:
+                st.info("Click 'Get AI Feedback' to get an AI-powered analysis of the current market levels.")
+        
+        # --- 9. Auto-Refresh Loop ---
+        # time.sleep(300)  # Wait 300 seconds (5 minutes)
+        # st.rerun()       # Rerun the script
