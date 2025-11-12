@@ -15,4 +15,4 @@ jobs:
         # Use curl to send an HTTP request to your app's URL
         # The -s flag makes it silent (no output)
         # We send the output to /dev/null to discard it
-        run: curl -s "https://stockcharttrend.streamlit.app/" > /dev/null
+        run: wget -o- "https://stockcharttrend.streamlit.app/" > /dev/null
